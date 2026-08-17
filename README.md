@@ -6,7 +6,10 @@
 
 基于 Jina Embeddings 统一多模态嵌入空间 + Qwen3.5 LLM 的检索增强生成（RAG）系统，支持文本、图像、音频、视频四种模态的入库与智能问答，具备真正的跨模态语义检索能力——用文字搜图片、用图片找视频、用音频查文本等。专为 AX650N 边缘 AI 芯片优化，可在嵌入式设备上实现完整的跨模态语义检索与智能问答。
 
+
 [观看演示视频](https://github.com/user-attachments/assets/eebf2fb1-216b-49d2-aa1d-e97d7dcec35b)
+
+---
 
 ## 目录
 
