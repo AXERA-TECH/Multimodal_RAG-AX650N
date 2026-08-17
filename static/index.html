@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multimodal RAG</title>
+  <link rel="stylesheet" href="/style.css?v=11">
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳到主要内容</a>
+
+<nav class="sidebar" aria-label="主导航">
+  <div class="sidebar-logo">
+    <div class="icon">M</div>
+    <span class="brand">Multimodal RAG</span>
+  </div>
+
+  <button class="nav-item active" data-page="qa">
+    <span class="nav-icon">QA</span> 智能问答
+  </button>
+  <button class="nav-item" data-page="ingestion">
+    <span class="nav-icon">IN</span> 数据入库
+  </button>
+  <button class="nav-item" data-page="crossmodal">
+    <span class="nav-icon">XM</span> 跨模态搜索
+  </button>
+  <button class="nav-item" data-page="management">
+    <span class="nav-icon">MG</span> 系统管理
+  </button>
+
+  <div class="sidebar-footer">API v1.0</div>
+</nav>
+
+<div class="main" id="main-content">
+
+  <div id="app-loader" class="loading" style="justify-content:center;padding:80px 20px;">
+    <div class="spinner"></div>加载中…
+  </div>
+
+  <!-- QA Page -->
+  <section class="page active" id="page-qa">
+    <div class="page-header">
+      <h1>智能问答</h1>
+      <p>基于多模态知识库的 RAG 问答</p>
+    </div>
+
+    <div class="card">
+      <div class="qa-input-area">
+        <textarea id="qa-question" name="question" placeholder="输入你的问题…" rows="2"></textarea>
+        <button class="btn btn-primary" id="qa-submit" style="flex:none;">提问</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">检索设置</div>
+      <div class="settings-row">
+        <div class="form-group">
+          <label class="form-label">Top-K</label>
+          <input type="number" id="qa-topk" name="top_k" value="5" min="1" max="30" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">模态</label>
+          <select id="qa-modality">
+            <option value="all">全部</option>
+            <option value="text">文本</option>
+            <option value="image">图片</option>
+            <option value="audio">音频</option>
+            <option value="video">视频</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">相似度阈值</label>
+          <input type="number" id="qa-threshold" name="min_similarity" value="0" min="0" max="1" step="0.1" autocomplete="off">
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;padding-top:20px;">
+          <label for="qa-crossmodal" class="form-label" style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="qa-crossmodal" name="cross_modal" style="width:auto;">
+            跨模态搜索
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="qa-answer-container"></div>
+    <div id="qa-sources-container"></div>
+  </section>
+
+  <!-- Ingestion Page -->
+  <section class="page" id="page-ingestion">
+    <div class="page-header">
+      <h1>数据入库</h1>
+      <p>上传文件，管理索引，预览分块</p>
+    </div>
+
+    <div class="ingest-layout">
+      <div id="ingest-results-container"></div>
+
+      <div class="ingest-split">
+        <!-- Column 1: Upload -->
+        <div class="ingest-panel ingest-col-upload">
+          <div class="card ingest-panel-card">
+            <div class="card-header">上传文件</div>
+            <div class="dropzone" id="ingest-dropzone">
+              <div class="dropzone-icon">+</div>
+              <div class="dropzone-text">拖拽文件或点击选择</div>
+              <div class="dropzone-hint">支持文本 / 图片 / 音频 / 视频</div>
+            </div>
+            <input type="file" id="ingest-file-input" multiple hidden>
+            <div id="ingest-file-list" class="file-list"></div>
+            <div class="ingest-upload-actions">
+              <span class="card-subtitle" id="file-count-text">0 个文件</span>
+              <label class="ingest-incremental-label">
+                <input type="checkbox" id="ingest-incremental"> 增量模式
+              </label>
+            </div>
+            <button class="btn btn-primary btn-full" id="ingest-submit">开始入库</button>
+          </div>
+        </div>
+        <!-- Column 2: Sources -->
+        <div class="ingest-panel ingest-col-sources">
+          <div class="card ingest-panel-card">
+            <div class="card-header">
+              已索引数据源 <span class="card-subtitle" id="ingest-source-count"></span>
+              <div class="ingest-panel-actions">
+                <button class="btn btn-secondary btn-sm" id="ingest-refresh">刷新</button>
+                <button class="btn btn-danger btn-sm" id="ingest-clear-all">清空</button>
+              </div>
+            </div>
+            <div id="ingest-sources-list" class="ingest-scroll-area">
+              <div id="ingest-sources-empty" class="empty-state"><div class="text">暂无已索引数据</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- Column 3: Preview -->
+        <div class="ingest-panel ingest-col-preview">
+          <div class="card ingest-panel-card" id="ingest-chunks-panel">
+            <div class="card-header">分块预览</div>
+            <div id="ingest-chunks-content" class="ingest-scroll-area">
+              <div class="empty-state">点击数据源的「查看」按钮<br>预览分块详情</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cross-Modal Page -->
+  <section class="page" id="page-crossmodal">
+    <div class="page-header">
+      <h1>跨模态搜索</h1>
+      <p>文本、图片、音频或视频作为查询 — 检索所有模态的相关内容</p>
+    </div>
+
+    <!-- Query Mode Selector -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="xm-mode-tabs">
+        <button class="xm-mode-tab active" data-mode="text">
+          <span class="xm-mode-icon">📝</span> 文本查询
+        </button>
+        <button class="xm-mode-tab" data-mode="image">
+          <span class="xm-mode-icon">🖼️</span> 图片查询
+        </button>
+        <button class="xm-mode-tab" data-mode="audio">
+          <span class="xm-mode-icon">🎵</span> 音频查询
+        </button>
+        <button class="xm-mode-tab" data-mode="video">
+          <span class="xm-mode-icon">🎬</span> 视频查询
+        </button>
+      </div>
+    </div>
+
+    <!-- Text Query Input -->
+    <div class="card xm-input-panel" id="xm-text-panel">
+      <div class="qa-input-area">
+        <textarea id="xm-query" name="query" placeholder="输入搜索关键词…" rows="2"></textarea>
+        <button class="btn btn-primary" id="xm-submit">搜索</button>
+      </div>
+    </div>
+
+    <!-- File Query Input -->
+    <div class="card xm-input-panel" id="xm-file-panel" style="display:none;">
+      <div class="xm-file-upload-area" id="xm-dropzone">
+        <div class="xm-file-preview" id="xm-file-preview" style="display:none;">
+          <img id="xm-preview-img" style="display:none;" alt="查询预览">
+          <div id="xm-preview-audio" class="xm-audio-badge" style="display:none;">🎵 音频文件</div>
+          <div id="xm-preview-video" class="xm-video-badge" style="display:none;">🎬 视频文件</div>
+          <span id="xm-file-name" class="xm-file-name-display"></span>
+          <button class="btn btn-sm btn-secondary" id="xm-file-remove">移除</button>
+        </div>
+        <div id="xm-dropzone-hint" class="dropzone" style="padding:24px;">
+          <div class="dropzone-icon" id="xm-dropzone-icon">+</div>
+          <div class="dropzone-text" id="xm-dropzone-text">拖拽文件或点击选择</div>
+          <div class="dropzone-hint" id="xm-dropzone-hint-text">支持图片 / 音频 / 视频</div>
+        </div>
+        <input type="file" id="xm-file-input" hidden>
+      </div>
+      <button class="btn btn-primary" id="xm-file-submit" style="margin-top:10px;">以文件内容检索</button>
+    </div>
+
+    <!-- Top-K + Threshold -->
+    <div class="card" style="max-width:360px;">
+      <div class="settings-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="xm-topk">每模态 Top-K</label>
+          <input type="number" id="xm-topk" name="top_k" value="5" min="1" max="15" autocomplete="off">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="xm-threshold">相似度阈值</label>
+          <input type="number" id="xm-threshold" name="min_similarity" value="0" min="0" max="1" step="0.1" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <div id="xm-results-container"></div>
+  </section>
+
+  <!-- Management Page -->
+  <section class="page" id="page-management">
+    <div class="page-header">
+      <h1>系统管理</h1>
+      <p>向量库状态 · 数据源管理 · 模型配置</p>
+    </div>
+
+    <div class="stats-grid" id="mg-stats-grid"></div>
+
+    <div class="card">
+      <div class="card-header">模态分布 <span id="mg-modality-breakdown"></span></div>
+    </div>
+
+    <!-- Model Configuration -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">模型配置 <span class="card-subtitle">修改后需重启服务生效</span></div>
+      <div class="config-grid">
+        <div class="form-group">
+          <label class="form-label">LLM API Base</label>
+          <input type="text" id="cfg-llm-base" name="llm_api_base" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">LLM Model</label>
+          <input type="text" id="cfg-llm-model" name="llm_model_name" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Embedding API Base</label>
+          <input type="text" id="cfg-emb-base" name="embedding_api_base" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Embedding Model</label>
+          <input type="text" id="cfg-emb-model" name="embedding_model_name" autocomplete="off">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="cfg-save" style="margin-top:12px;">保存配置</button>
+    </div>
+
+    <!-- Preprocessing Configuration -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">预处理参数 <span class="card-subtitle">修改后需重启服务生效</span></div>
+      <div class="config-grid">
+        <div class="card-subtitle" style="grid-column:1/-1;margin-bottom:-8px;font-weight:600;color:var(--text);">📝 文本分块</div>
+        <div class="form-group">
+          <label class="form-label">Chunk Size (tokens)</label>
+          <input type="number" id="cfg-text-chunk-size" name="text_chunk_size" autocomplete="off" min="64" max="4096">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Chunk Overlap (tokens)</label>
+          <input type="number" id="cfg-text-chunk-overlap" name="text_chunk_overlap" autocomplete="off" min="0" max="2048">
+        </div>
+
+        <div class="card-subtitle" style="grid-column:1/-1;margin-bottom:-8px;font-weight:600;color:var(--text);">🖼️ 图片处理</div>
+        <div class="form-group">
+          <label class="form-label">Target Size (px)</label>
+          <input type="number" id="cfg-image-target-size" name="image_target_size" autocomplete="off" min="64" max="2048">
+        </div>
+        <div class="form-group">
+          <label class="form-label">JPEG Quality (1-100)</label>
+          <input type="number" id="cfg-image-quality" name="image_quality" autocomplete="off" min="1" max="100">
+        </div>
+
+        <div class="card-subtitle" style="grid-column:1/-1;margin-bottom:-8px;font-weight:600;color:var(--text);">🎵 音频切片</div>
+        <div class="form-group">
+          <label class="form-label">最大片段时长 (秒)</label>
+          <input type="number" id="cfg-audio-max-dur" name="audio_max_duration_sec" autocomplete="off" min="5" max="60" step="0.5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">重叠时长 (秒)</label>
+          <input type="number" id="cfg-audio-overlap" name="audio_overlap_sec" autocomplete="off" min="0" max="30" step="0.5">
+        </div>
+
+        <div class="card-subtitle" style="grid-column:1/-1;margin-bottom:-8px;font-weight:600;color:var(--text);">🎬 视频处理 (单视频单向量)</div>
+        <div class="form-group">
+          <label class="form-label">输出分辨率 (px)</label>
+          <input type="number" id="cfg-video-target-size" name="video_target_size" autocomplete="off" min="64" max="2048">
+        </div>
+        <div class="form-group">
+          <label class="form-label">最大帧数</label>
+          <input type="number" id="cfg-video-max-frames" name="video_max_frames" autocomplete="off" min="1" max="500">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Q&A 提取帧数</label>
+          <input type="number" id="cfg-video-qa-frames" name="video_qa_frames" autocomplete="off" min="1" max="32">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="cfg-preprocess-save" style="margin-top:12px;">保存预处理参数</button>
+    </div>
+  </section>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <h3 id="modal-title">确认</h3>
+    <p id="modal-message"></p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modal-cancel">取消</button>
+      <button class="btn btn-danger" id="modal-confirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<script src="/app.js?v=11"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+
+uphg.py
+
+# Environment
+.env
+
+# Vector DB
+chroma_db/
+
+# Media cache
+media_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,49 @@
+# Core
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Embedding
+sentence-transformers>=3.0.0
+torch>=2.0.0
+requests>=2.28.0
+
+# Vector Store
+chromadb>=0.5.0
+
+# Text Processing
+langchain-text-splitters>=0.3.0
+tiktoken>=0.5.0
+
+# Image Processing
+Pillow>=10.0.0
+
+python-docx
+striprtf
+
+# Audio Processing
+librosa>=0.10.0
+soundfile>=0.12.0
+
+# Video Processing
+opencv-python-headless>=4.8.0
+
+# LLM Backends
+
+
+openai>=1.30.0
+
+# UI
+gradio>=4.0.0
+typer>=0.12.0
+rich>=13.0.0
+
+# API Server
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+
+# Utilities
+numpy>=1.24.0
+tqdm>=4.66.0
+jinja2>=3.1.0
